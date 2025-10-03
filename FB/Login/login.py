@@ -5,6 +5,7 @@ from urllib.parse import urlparse, parse_qs, unquote
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support import expected_conditions as EC
+from FB.utils.waits import wait_and_type, wait_and_click, wait_for_presence
 
 from twocaptcha import TwoCaptcha
 
@@ -23,30 +24,25 @@ def _get_login_page():
     driver.get('https://www.facebook.com/')
 
 def _insert_login(login: str):
-    login_input = driver.find_element(By.NAME, 'email')
-    login_input.send_keys(login)
+    wait_and_type(driver, By.NAME, 'email', login)
 
 def _insert_password(password: str):
-    login_input = driver.find_element(By.NAME, 'pass')
-    login_input.send_keys(password)
+    wait_and_type(driver, By.NAME, 'pass', password)
 
 def _click_login_button():
-    login_button = driver.find_element(By.CLASS_NAME, 'selected').click()
+    wait_and_click(driver, By.CLASS_NAME, 'selected')
 
 def get_captcha_data():
     while True:
         try:
             driver.switch_to.default_content()
-            outer_iframe = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.ID, "arkose-captcha"))
-        )       
+            outer_iframe = wait_for_presence(driver, By.ID, "arkose-captcha", 10)
             driver.switch_to.frame(outer_iframe)
             url = driver.execute_script("return document.location.href;")
-            inner_iframe = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "iframe[data-e2e='enforcement-frame']"))
-        )       
+            inner_iframe = wait_for_presence(driver, By.CSS_SELECTOR, "iframe[data-e2e='enforcement-frame']", 10)
             driver.switch_to.frame(inner_iframe)
-            captcha_data = driver.find_element(By.ID, 'verification-token').get_attribute('value').split('|')
+            captcha_el = wait_for_presence(driver, By.ID, 'verification-token', 10)
+            captcha_data = captcha_el.get_attribute('value').split('|')
 
             site_key = captcha_data[7].split('=')[1]
             surl = captcha_data[11].split('=')[1]

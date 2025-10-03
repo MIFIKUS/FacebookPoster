@@ -1,6 +1,9 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import StaleElementReferenceException, NoSuchElementException, JavascriptException
+from selenium.common.exceptions import StaleElementReferenceException, NoSuchElementException, JavascriptException, TimeoutException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from FB.utils.waits import wait_for_presence
 
 from urllib.parse import quote
 import time
@@ -24,10 +27,12 @@ def find_all_groups(driver: webdriver.Chrome, keyword: str) -> dict:
             print("Достигнут конец результатов поиска")
             break
         except NoSuchElementException:
-            # Элемент не найден, продолжаем поиск
             pass
-        
-        feed_div = driver.find_element(By.XPATH, '//div[@role="feed"]')
+
+        try:
+            feed_div = wait_for_presence(driver, By.XPATH, '//div[@role="feed"]', 15)
+        except TimeoutException:
+            break
         groups = feed_div.find_elements(By.XPATH, './/a[@role="presentation"]')
 
         removed_any = False
