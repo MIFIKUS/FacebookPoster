@@ -170,6 +170,21 @@ def set_cookies_callback(call):
         "Просто прикрепите файл сюда сообщением."
     )
 
+@bot.message_handler(commands=["set_proxy"])
+def set_proxy_command(message):
+    user_states[message.from_user.id] = "waiting_proxy"
+    config = load_config()
+    current_proxy = config.get("proxy") or "Нет"
+    bot.send_message(
+        message.chat.id,
+        "🌐 Введите прокси для браузера в одном из форматов:\n\n"
+        "- http://user:pass@host:port\n"
+        "- http://host:port\n"
+        "- socks5://user:pass@host:port\n"
+        "- socks5://host:port\n\n"
+        f"Текущий: {current_proxy}"
+    )
+
 @bot.callback_query_handler(func=lambda call: call.data == "set_keywords")
 def set_keywords_callback(call):
     bot.answer_callback_query(call.id)
