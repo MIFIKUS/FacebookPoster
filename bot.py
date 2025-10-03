@@ -6,6 +6,7 @@ import threading
 import traceback
 import tempfile
 import shutil
+import platform
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from FB.Groups.find import find_all_groups
@@ -104,6 +105,9 @@ def load_preview_posts():
 
 # Состояния пользователей
 user_states = {}
+
+# Глобальная блокировка для создания экземпляров Chrome (во избежание гонок на VPS)
+chrome_creation_lock = threading.Lock()
 
 @bot.message_handler(commands=["start"])
 def start_message(message):
@@ -268,13 +272,17 @@ def create_posts_preview(chat_id, config):
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--window-size=1920,1080")
-        #chrome_options.add_argument("--no-sandbox")
-        #chrome_options.add_argument("--disable-dev-shm-usage")
+        if platform.system() != "Windows":
+            chrome_options.add_argument("--no-sandbox")
+            chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--remote-debugging-port=0")
         # Уникальный профиль для избежания конфликта user-data-dir
         temp_profile_dir = tempfile.mkdtemp(prefix="fbposter_chrome_")
         chrome_options.add_argument(f"--user-data-dir={temp_profile_dir}")
 
-        driver = webdriver.Chrome(options=chrome_options)
+        # Создаем драйвер под блокировкой, чтобы не стартовали одновременно несколько инстансов
+        with chrome_creation_lock:
+            driver = webdriver.Chrome(options=chrome_options)
 
         # Логин по cookies
         bot.send_message(chat_id, "🔐 Авторизация через cookies...")
@@ -371,13 +379,17 @@ def run_facebook_script(chat_id):
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--window-size=1920,1080")
-        #chrome_options.add_argument("--no-sandbox")
-        #chrome_options.add_argument("--disable-dev-shm-usage")
+        if platform.system() != "Windows":
+            chrome_options.add_argument("--no-sandbox")
+            chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--remote-debugging-port=0")
         # Уникальный профиль для избежания конфликта user-data-dir
         temp_profile_dir = tempfile.mkdtemp(prefix="fbposter_chrome_")
         chrome_options.add_argument(f"--user-data-dir={temp_profile_dir}")
 
-        driver = webdriver.Chrome(options=chrome_options)
+        # Создаем драйвер под блокировкой, чтобы не стартовали одновременно несколько инстансов
+        with chrome_creation_lock:
+            driver = webdriver.Chrome(options=chrome_options)
 
         # Логин по cookies
         bot.send_message(chat_id, "🔐 Авторизация через cookies...")
