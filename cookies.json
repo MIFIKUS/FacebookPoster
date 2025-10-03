@@ -1,0 +1,93 @@
+[
+  {
+    "name": "c_user",
+    "value": "100063620057045",
+    "domain": ".facebook.com",
+    "path": "/",
+    "secure": true,
+    "httpOnly": false,
+    "sameSite": "no_restriction",
+    "session": false,
+    "expirationDate": 1791034249.971932,
+    "storeId": "0",
+    "partitionKey": null
+  },
+  {
+    "name": "datr",
+    "value": "RlnJaHjc5KssdwKySGxSxJNp",
+    "domain": ".facebook.com",
+    "path": "/",
+    "secure": true,
+    "httpOnly": true,
+    "sameSite": "no_restriction",
+    "session": false,
+    "expirationDate": 1792596920.022306,
+    "storeId": "0",
+    "partitionKey": null
+  },
+  {
+    "name": "fr",
+    "value": "1hFjCEkIgMdtgNXSs.AWfQpJ_jmgby2dKiA-A1_OjOIGusislgl7WXs2-jrIxYcukSoZ8.Bo39AG..AAA.0.0.Bo39AG.AWcyLoAAZOfEMB1B0KLj7486yng",
+    "domain": ".facebook.com",
+    "path": "/",
+    "secure": true,
+    "httpOnly": true,
+    "sameSite": "no_restriction",
+    "session": false,
+    "expirationDate": 1767274249.972127,
+    "storeId": "0",
+    "partitionKey": null
+  },
+  {
+    "name": "presence",
+    "value": "C%7B%22t3%22%3A%5B%5D%2C%22utc3%22%3A1759498249648%2C%22v%22%3A1%7D",
+    "domain": ".facebook.com",
+    "path": "/",
+    "secure": true,
+    "httpOnly": false,
+    "sameSite": "unspecified",
+    "session": true,
+    "expirationDate": null,
+    "storeId": "0",
+    "partitionKey": null
+  },
+  {
+    "name": "sb",
+    "value": "qoPJaLw2JPsk0_DG-xfx3wHF",
+    "domain": ".facebook.com",
+    "path": "/",
+    "secure": true,
+    "httpOnly": true,
+    "sameSite": "no_restriction",
+    "session": false,
+    "expirationDate": 1792596945.440142,
+    "storeId": "0",
+    "partitionKey": null
+  },
+  {
+    "name": "wd",
+    "value": "1920x919",
+    "domain": ".facebook.com",
+    "path": "/",
+    "secure": true,
+    "httpOnly": false,
+    "sameSite": "lax",
+    "session": false,
+    "expirationDate": 1760103049,
+    "storeId": "0",
+    "partitionKey": null
+  },
+  {
+    "name": "xs",
+    "value": "38%3A6DWE2SHtwMLM3Q%3A2%3A1758036946%3A-1%3A-1%3A%3AAcXE6zKRwlaxuUJM9y1id3UbicgDY7jRHmGbNAhzUwM",
+    "domain": ".facebook.com",
+    "path": "/",
+    "secure": true,
+    "httpOnly": true,
+    "sameSite": "no_restriction",
+    "session": false,
+    "expirationDate": 1791034249.97224,
+    "storeId": "0",
+    "partitionKey": null
+  }
+]
