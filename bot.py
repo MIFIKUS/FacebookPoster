@@ -603,6 +603,13 @@ def handle_text(message):
         del user_states[user_id]
         bot.send_message(message.chat.id, "✅ Текст поста сохранен!")
 
+    elif state == "waiting_proxy":
+        proxy_value = message.text.strip()
+        config["proxy"] = proxy_value
+        save_config(config)
+        del user_states[user_id]
+        bot.send_message(message.chat.id, "✅ Прокси сохранен!")
+
 if __name__ == "__main__":
     print("🤖 Бот запущен!")
     bot.infinity_polling()
