@@ -1,4 +1,5 @@
 import telebot
+import time
 from telebot import types
 import json
 import os
@@ -68,6 +69,7 @@ def _auth_with_cookies(driver, cookies_file_path):
             pass
     # Применяем cookies
     driver.get("https://www.facebook.com/")
+    time.sleep(10)
     driver.get_screenshot_as_file("cookies_applied.png")
 # Сохранение конфигурации
 def save_config(config):
