@@ -11,6 +11,7 @@ import platform
 from io import BytesIO
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
 from FB.Groups.find import find_all_groups
 from FB.Groups.research import research_group
 # from FB.Login.login import make_login
@@ -70,6 +71,45 @@ def _auth_with_cookies(driver, cookies_file_path):
     # Применяем cookies
     driver.get("https://www.facebook.com/")
     time.sleep(10)
+    
+    # Диагностика загрузки страницы
+    current_url = driver.current_url
+    page_title = driver.title
+    page_source_length = len(driver.page_source)
+    
+    print(f"URL после загрузки: {current_url}")
+    print(f"Заголовок страницы: {page_title}")
+    print(f"Размер HTML: {page_source_length} символов")
+    
+    # Проверяем, есть ли элементы на странице
+    try:
+        body = driver.find_element(By.TAG_NAME, "body")
+        body_text = body.text[:200] if body.text else "Пустой body"
+        print(f"Первые 200 символов body: {body_text}")
+    except Exception as e:
+        print(f"Не удалось найти body: {e}")
+    
+    # Проверяем на антибот защиту
+    try:
+        # Ищем признаки блокировки
+        if "checkpoint" in current_url.lower() or "challenge" in current_url.lower():
+            print("⚠️ Обнаружена проверка безопасности Facebook!")
+        
+        # Ищем капчу
+        captcha_elements = driver.find_elements(By.XPATH, "//*[contains(text(), 'captcha') or contains(text(), 'капча') or contains(text(), 'verification')]")
+        if captcha_elements:
+            print("⚠️ Обнаружена капча!")
+            
+        # Ищем сообщения об ошибке
+        error_elements = driver.find_elements(By.XPATH, "//*[contains(text(), 'error') or contains(text(), 'ошибка') or contains(text(), 'blocked') or contains(text(), 'заблокирован')]")
+        if error_elements:
+            print("⚠️ Обнаружены сообщения об ошибке!")
+            for elem in error_elements[:3]:  # Показываем первые 3
+                print(f"Ошибка: {elem.text}")
+                
+    except Exception as e:
+        print(f"Ошибка при проверке антибот защиты: {e}")
+    
     driver.get_screenshot_as_file("cookies_applied.png")
 # Сохранение конфигурации
 def save_config(config):
