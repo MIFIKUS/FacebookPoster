@@ -4,6 +4,8 @@ import json
 import os
 import threading
 import traceback
+import tempfile
+import shutil
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from FB.Groups.find import find_all_groups
@@ -260,6 +262,7 @@ def edit_posts_callback(call):
 
 def create_posts_preview(chat_id, config):
     driver = None
+    temp_profile_dir = None
     try:
         # Настройка Chrome
         chrome_options = Options()
@@ -267,6 +270,9 @@ def create_posts_preview(chat_id, config):
         chrome_options.add_argument("--window-size=1920,1080")
         #chrome_options.add_argument("--no-sandbox")
         #chrome_options.add_argument("--disable-dev-shm-usage")
+        # Уникальный профиль для избежания конфликта user-data-dir
+        temp_profile_dir = tempfile.mkdtemp(prefix="fbposter_chrome_")
+        chrome_options.add_argument(f"--user-data-dir={temp_profile_dir}")
 
         driver = webdriver.Chrome(options=chrome_options)
 
@@ -346,9 +352,12 @@ def create_posts_preview(chat_id, config):
     finally:
         if driver:
             driver.quit()
+        if temp_profile_dir and os.path.isdir(temp_profile_dir):
+            shutil.rmtree(temp_profile_dir, ignore_errors=True)
 
 def run_facebook_script(chat_id):
     driver = None
+    temp_profile_dir = None
     try:
         # Загружаем превью постов
         preview_posts = load_preview_posts()
@@ -362,6 +371,9 @@ def run_facebook_script(chat_id):
         chrome_options.add_argument("--window-size=1920,1080")
         #chrome_options.add_argument("--no-sandbox")
         #chrome_options.add_argument("--disable-dev-shm-usage")
+        # Уникальный профиль для избежания конфликта user-data-dir
+        temp_profile_dir = tempfile.mkdtemp(prefix="fbposter_chrome_")
+        chrome_options.add_argument(f"--user-data-dir={temp_profile_dir}")
 
         driver = webdriver.Chrome(options=chrome_options)
 
@@ -403,6 +415,8 @@ def run_facebook_script(chat_id):
     finally:
         if driver:
             driver.quit()
+        if temp_profile_dir and os.path.isdir(temp_profile_dir):
+            shutil.rmtree(temp_profile_dir, ignore_errors=True)
 
 @bot.message_handler(content_types=["document"])
 def handle_document(message):
