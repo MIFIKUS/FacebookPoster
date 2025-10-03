@@ -49,7 +49,10 @@ def load_config():
         "proxy": ""
     }
 def _auth_with_cookies(driver, cookies_file_path):
+    # Сначала загружаем страницу без cookies
     driver.get("https://www.facebook.com/")
+    time.sleep(3)  # Даем время на загрузку
+    
     # Загружаем cookies
     with open(cookies_file_path, "r", encoding="utf-8") as f:
         cookies = json.load(f)
@@ -68,6 +71,7 @@ def _auth_with_cookies(driver, cookies_file_path):
         except Exception:
             # Пропускаем некорректные cookies
             pass
+    
     # Применяем cookies
     driver.get("https://www.facebook.com/")
     time.sleep(10)
@@ -369,6 +373,12 @@ def create_posts_preview(chat_id, config):
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--remote-debugging-port=0")
+        
+        # Антибот настройки
+        chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        chrome_options.add_experimental_option('useAutomationExtension', False)
         # Уникальный профиль для избежания конфликта user-data-dir
         temp_profile_dir = tempfile.mkdtemp(prefix="fbposter_chrome_")
         chrome_options.add_argument(f"--user-data-dir={temp_profile_dir}")
@@ -380,6 +390,12 @@ def create_posts_preview(chat_id, config):
         # Создаем драйвер под блокировкой, чтобы не стартовали одновременно несколько инстансов
         with chrome_creation_lock:
             driver = webdriver.Chrome(options=chrome_options)
+            
+        # Скрываем автоматизацию
+        driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        driver.execute_cdp_cmd('Network.setUserAgentOverride', {
+            "userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        })
 
         # Логин по cookies
         bot.send_message(chat_id, "🔐 Авторизация через cookies...")
@@ -484,6 +500,12 @@ def run_facebook_script(chat_id):
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--remote-debugging-port=0")
+        
+        # Антибот настройки
+        chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        chrome_options.add_experimental_option('useAutomationExtension', False)
         # Уникальный профиль для избежания конфликта user-data-dir
         temp_profile_dir = tempfile.mkdtemp(prefix="fbposter_chrome_")
         chrome_options.add_argument(f"--user-data-dir={temp_profile_dir}")
@@ -495,6 +517,12 @@ def run_facebook_script(chat_id):
         # Создаем драйвер под блокировкой, чтобы не стартовали одновременно несколько инстансов
         with chrome_creation_lock:
             driver = webdriver.Chrome(options=chrome_options)
+            
+        # Скрываем автоматизацию
+        driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        driver.execute_cdp_cmd('Network.setUserAgentOverride', {
+            "userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        })
 
         # Логин по cookies
         bot.send_message(chat_id, "🔐 Авторизация через cookies...")
