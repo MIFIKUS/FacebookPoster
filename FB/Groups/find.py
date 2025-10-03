@@ -4,6 +4,7 @@ from selenium.common.exceptions import StaleElementReferenceException, NoSuchEle
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from FB.utils.waits import wait_for_presence
+import traceback
 
 from urllib.parse import quote
 import time
@@ -40,8 +41,10 @@ def find_all_groups(driver: webdriver.Chrome, keyword: str) -> dict:
         for group in groups:
             try:
                 link = group.get_attribute('href')
-            except StaleElementReferenceException:
+            except StaleElementReferenceException as e:
                 # элемент устарел — просто пропускаем, перезапросим весь список в следующей итерации
+                traceback.print_exc()
+                print(f"StaleElementReferenceException при получении ссылки: {str(e)}")
                 continue
 
             if not link:
@@ -65,8 +68,10 @@ def find_all_groups(driver: webdriver.Chrome, keyword: str) -> dict:
                         }
                         return false;
                     """, group)
-                except (StaleElementReferenceException, JavascriptException):
+                except (StaleElementReferenceException, JavascriptException) as e:
                     # если элемент стал stale между чтением и вызовом JS — пропустим; перезапросим позже
+                    traceback.print_exc()
+                    print(f"Ошибка при удалении элемента: {str(e)}")
                     removed = False
 
                 if removed:
@@ -84,8 +89,10 @@ def find_all_groups(driver: webdriver.Chrome, keyword: str) -> dict:
             # если ссылка новая — обрабатываем
             try:
                 title = group.text
-            except StaleElementReferenceException:
+            except StaleElementReferenceException as e:
                 # если элемент стал устаревшим до чтения текста, пропустим — перезапустим цикл
+                traceback.print_exc()
+                print(f"StaleElementReferenceException при чтении текста: {str(e)}")
                 continue
 
             ready_groups[title] = link

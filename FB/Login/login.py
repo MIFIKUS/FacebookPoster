@@ -6,6 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support import expected_conditions as EC
 from FB.utils.waits import wait_and_type, wait_and_click, wait_for_presence
+import traceback
 
 from twocaptcha import TwoCaptcha
 
@@ -48,7 +49,8 @@ def get_captcha_data():
             surl = captcha_data[11].split('=')[1]
             return {'site-key': site_key, 'url': url, 'surl': surl}
         except Exception as e:
-            print(e)
+            traceback.print_exc()
+            print(f"Ошибка при получении данных капчи: {str(e)}")
             pass
 
 

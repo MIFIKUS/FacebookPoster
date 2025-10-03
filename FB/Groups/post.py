@@ -3,6 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
+import traceback
 
 import time
 
@@ -40,8 +41,9 @@ def make_post(driver: webdriver.Chrome, post: str, link: str):
 
         time.sleep(2)
         
-    except TimeoutException:
-        print("Ошибка: Не удалось найти элементы на странице в течение ожидаемого времени")
+    except TimeoutException as e:
+        traceback.print_exc()
+        print(f"Ошибка: Не удалось найти элементы на странице в течение ожидаемого времени: {str(e)}")
         raise 
 
     

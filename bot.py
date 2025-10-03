@@ -573,7 +573,8 @@ def handle_document(message):
                     raise ValueError("Ожидался массив cookie")
             except Exception as e:
                 os.remove(cookies_path)
-                bot.send_message(message.chat.id, f"❌ Некорректный файл cookies: {str(e)}")
+                traceback.print_exc()
+                bot.send_message(message.chat.id, f"❌ Некорректный файл cookies: {str(e)}\n{traceback.format_exc()}")
                 return
 
             # Сохраняем путь в конфиг

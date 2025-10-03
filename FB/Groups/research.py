@@ -5,6 +5,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from urllib.parse import urlparse
+import traceback
 
 import time
 
@@ -57,7 +58,9 @@ def research_group(driver: webdriver.Chrome, url: str) -> dict:
                 # сохраняем только первую полную ссылку, найденную для base
                 if base not in unique_links:
                     unique_links[base] = href 
-        except:
+        except Exception as e:
+            traceback.print_exc()
+            print(f"Ошибка при обработке ссылки поста: {str(e)}")
             pass
 
     all_posts_link = list(unique_links.values())
