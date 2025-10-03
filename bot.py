@@ -7,6 +7,7 @@ import traceback
 import tempfile
 import shutil
 import platform
+from io import BytesIO
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from FB.Groups.find import find_all_groups
@@ -112,6 +113,18 @@ user_states = {}
 
 # Глобальная блокировка для создания экземпляров Chrome (во избежание гонок на VPS)
 chrome_creation_lock = threading.Lock()
+
+def send_debug_screenshot(chat_id, driver, caption=""):
+    try:
+        png_bytes = driver.get_screenshot_as_png()
+        bio = BytesIO(png_bytes)
+        bio.name = "debug_screenshot.png"
+        bot.send_photo(chat_id, bio, caption=caption or "🖼️ Дебаг-скриншот")
+    except Exception as e:
+        try:
+            bot.send_message(chat_id, f"⚠️ Не удалось сделать скриншот: {str(e)}")
+        except Exception:
+            pass
 
 @bot.message_handler(commands=["start"])
 def start_message(message):
@@ -378,6 +391,7 @@ def create_posts_preview(chat_id, config):
                 error_count += 1
                 traceback.print_exc()
                 bot.send_message(chat_id, f"❌ Ошибка в группе {name}: {str(e)}\n{traceback.format_exc()}")
+                send_debug_screenshot(chat_id, driver, caption=f"🖼️ Скриншот при ошибке в группе: {name}")
 
         # Сохраняем превью постов
         save_preview_posts(preview_posts)
@@ -399,6 +413,8 @@ def create_posts_preview(chat_id, config):
     except Exception as e:
         traceback.print_exc()
         bot.send_message(chat_id, f"❌ Критическая ошибка при создании превью: {str(e)}\n{traceback.format_exc()}")
+        if driver:
+            send_debug_screenshot(chat_id, driver, caption="🖼️ Скриншот при критической ошибке создания превью")
 
     finally:
         if driver:
@@ -458,6 +474,7 @@ def run_facebook_script(chat_id):
                 traceback.print_exc()
                 error_count += 1
                 bot.send_message(chat_id, f"❌ Ошибка в группе {group_link}: {str(e)}\n{traceback.format_exc()}")
+                send_debug_screenshot(chat_id, driver, caption=f"🖼️ Скриншот при ошибке публикации: {group_link}")
 
 
         # Итоговый отчет
@@ -471,6 +488,8 @@ def run_facebook_script(chat_id):
     except Exception as e:
         traceback.print_exc()
         bot.send_message(chat_id, f"❌ Критическая ошибка: {str(e)}\n{traceback.format_exc()}")
+        if driver:
+            send_debug_screenshot(chat_id, driver, caption="🖼️ Скриншот при критической ошибке рассылки")
 
     finally:
         if driver:
@@ -526,6 +545,7 @@ def handle_document(message):
             os.remove(temp_file)
 
             del user_states[user_id]
+            
 
             # Показываем кнопки для подтверждения
             markup = types.InlineKeyboardMarkup()
