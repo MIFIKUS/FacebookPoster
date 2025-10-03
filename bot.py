@@ -327,7 +327,8 @@ def create_posts_preview(chat_id, config):
 
             except Exception as e:
                 error_count += 1
-                bot.send_message(chat_id, f"❌ Ошибка в группе {name}: {str(e)}")
+                traceback.print_exc()
+                bot.send_message(chat_id, f"❌ Ошибка в группе {name}: {str(e)}\n{traceback.format_exc()}")
 
         # Сохраняем превью постов
         save_preview_posts(preview_posts)
@@ -347,7 +348,8 @@ def create_posts_preview(chat_id, config):
         )
 
     except Exception as e:
-        bot.send_message(chat_id, f"❌ Критическая ошибка при создании превью: {str(e)}")
+        traceback.print_exc()
+        bot.send_message(chat_id, f"❌ Критическая ошибка при создании превью: {str(e)}\n{traceback.format_exc()}")
 
     finally:
         if driver:
@@ -398,7 +400,7 @@ def run_facebook_script(chat_id):
             except Exception as e:
                 traceback.print_exc()
                 error_count += 1
-                bot.send_message(chat_id, f"❌ Ошибка в группе {group_link}: {str(e)}")
+                bot.send_message(chat_id, f"❌ Ошибка в группе {group_link}: {str(e)}\n{traceback.format_exc()}")
 
 
         # Итоговый отчет
@@ -410,7 +412,8 @@ def run_facebook_script(chat_id):
         )
 
     except Exception as e:
-        bot.send_message(chat_id, f"❌ Критическая ошибка: {str(e)}")
+        traceback.print_exc()
+        bot.send_message(chat_id, f"❌ Критическая ошибка: {str(e)}\n{traceback.format_exc()}")
 
     finally:
         if driver:
@@ -508,7 +511,8 @@ def handle_document(message):
             return
 
     except Exception as e:
-        bot.send_message(message.chat.id, f"❌ Ошибка при обработке файла: {str(e)}")
+        traceback.print_exc()
+        bot.send_message(message.chat.id, f"❌ Ошибка при обработке файла: {str(e)}\n{traceback.format_exc()}")
 
 @bot.message_handler(func=lambda message: True)
 def handle_text(message):
