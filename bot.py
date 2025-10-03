@@ -68,6 +68,7 @@ def _auth_with_cookies(driver, cookies_file_path):
             pass
     # Применяем cookies
     driver.get("https://www.facebook.com/")
+    driver.get_screenshot_as_file("cookies_applied.png")
 # Сохранение конфигурации
 def save_config(config):
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:
