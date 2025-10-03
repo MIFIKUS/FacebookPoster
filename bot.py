@@ -31,6 +31,9 @@ def load_config():
             # Обратная совместимость: добавляем поле cookies_file, если его нет
             if "cookies_file" not in cfg:
                 cfg["cookies_file"] = ""
+            # Обратная совместимость: добавляем поле proxy, если его нет
+            if "proxy" not in cfg:
+                cfg["proxy"] = ""
             # Удаляем устаревшее поле login, если оно есть
             if "login" in cfg:
                 cfg.pop("login", None)
@@ -39,7 +42,8 @@ def load_config():
         "cookies_file": "",
         "keywords": [],
         "post_text": "",
-        "prompt": ""
+        "prompt": "",
+        "proxy": ""
     }
 def _auth_with_cookies(driver, cookies_file_path):
     driver.get("https://www.facebook.com/")
@@ -118,6 +122,7 @@ def start_message(message):
     markup.add(types.InlineKeyboardButton("🍪 Загрузить cookies", callback_data="set_cookies"))
     markup.add(types.InlineKeyboardButton("🔍 Задать ключевые слова", callback_data="set_keywords"))
     markup.add(types.InlineKeyboardButton("📄 Задать пост", callback_data="set_post"))
+    markup.add(types.InlineKeyboardButton("🌐 Задать прокси", callback_data="set_proxy"))
     markup.add(types.InlineKeyboardButton("🔍 Создать превью постов", callback_data="create_preview"))
     markup.add(types.InlineKeyboardButton("🚀 Запустить рассылку", callback_data="run_script"))
 
@@ -128,7 +133,8 @@ def start_message(message):
         f"• Cookies: {'✅ Загружены' if config.get('cookies_file') else '❌ Не загружены'}\n"
         f"• Ключевые слова: {len(config['keywords'])} шт.\n"
         f"• Пост: {'✅ Задан' if config['post_text'] else '❌ Не задан'}\n"
-        f"• Промпт: {'✅ Настроен' if config['prompt'] else '❌ Не настроен'}\n\n"
+        f"• Промпт: {'✅ Настроен' if config['prompt'] else '❌ Не настроен'}\n"
+        f"• Прокси: {'✅ Задан' if config.get('proxy') else '❌ Не задан'}\n\n"
         f"💡 Сначала создайте превью постов, затем запустите рассылку",
         reply_markup=markup
     )
@@ -184,6 +190,22 @@ def set_post_callback(call):
     bot.send_message(
         call.message.chat.id,
         f"📄 Введите текст поста (будет использован как {{text}} в промпте):\n\nТекущий: {current_post}"
+    )
+
+@bot.callback_query_handler(func=lambda call: call.data == "set_proxy")
+def set_proxy_callback(call):
+    bot.answer_callback_query(call.id)
+    user_states[call.from_user.id] = "waiting_proxy"
+    config = load_config()
+    current_proxy = config.get("proxy") or "Нет"
+    bot.send_message(
+        call.message.chat.id,
+        "🌐 Введите прокси для браузера в одном из форматов:\n\n"
+        "- http://user:pass@host:port\n"
+        "- http://host:port\n"
+        "- socks5://user:pass@host:port\n"
+        "- socks5://host:port\n\n"
+        f"Текущий: {current_proxy}"
     )
 
 @bot.callback_query_handler(func=lambda call: call.data == "create_preview")
@@ -279,6 +301,10 @@ def create_posts_preview(chat_id, config):
         # Уникальный профиль для избежания конфликта user-data-dir
         temp_profile_dir = tempfile.mkdtemp(prefix="fbposter_chrome_")
         chrome_options.add_argument(f"--user-data-dir={temp_profile_dir}")
+
+        # Применяем прокси, если задан
+        if config.get("proxy"):
+            chrome_options.add_argument(f"--proxy-server={config['proxy']}")
 
         # Создаем драйвер под блокировкой, чтобы не стартовали одновременно несколько инстансов
         with chrome_creation_lock:
@@ -376,6 +402,7 @@ def run_facebook_script(chat_id):
             return
 
         # Настройка Chrome
+        config = load_config()
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--window-size=1920,1080")
@@ -387,13 +414,16 @@ def run_facebook_script(chat_id):
         temp_profile_dir = tempfile.mkdtemp(prefix="fbposter_chrome_")
         chrome_options.add_argument(f"--user-data-dir={temp_profile_dir}")
 
+        # Применяем прокси, если задан
+        if config.get("proxy"):
+            chrome_options.add_argument(f"--proxy-server={config['proxy']}")
+
         # Создаем драйвер под блокировкой, чтобы не стартовали одновременно несколько инстансов
         with chrome_creation_lock:
             driver = webdriver.Chrome(options=chrome_options)
 
         # Логин по cookies
         bot.send_message(chat_id, "🔐 Авторизация через cookies...")
-        config = load_config()
         _auth_with_cookies(driver, config["cookies_file"])
         bot.send_message(chat_id, "✅ Cookies применены!")
 
