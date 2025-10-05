@@ -391,8 +391,28 @@ def create_posts_preview(chat_id, config):
             if proxy_url:
                 # Прокси с авторизацией: user:pass@host:port
                 # Пример: https://user301581:lqvn2y@77.83.195.210:8862
-                sap = SeleniumAuthenticatedProxy(proxy_url)
-                sap.add_to(chrome_options)
+                try:
+                    sap = SeleniumAuthenticatedProxy(proxy_url)
+                    # Поддержка разных версий пакета: пробуем доступные варианты
+                    if hasattr(sap, "add_to"):
+                        sap.add_to(chrome_options)
+                    elif hasattr(sap, "add_to_chrome"):
+                        sap.add_to_chrome(chrome_options)
+                    elif hasattr(sap, "apply_to"):
+                        sap.apply_to(chrome_options)
+                    else:
+                        raise AttributeError("SeleniumAuthenticatedProxy: не найден совместимый метод интеграции с ChromeOptions")
+                except Exception as e:
+                    # Резерв: базовая настройка прокси без авторизации через --proxy-server
+                    # (учет схемы и host:port; логин/пароль не обрабатываются этим способом)
+                    try:
+                        from urllib.parse import urlparse
+                        parsed = urlparse(proxy_url)
+                        scheme = parsed.scheme or "http"
+                        if parsed.hostname and parsed.port:
+                            chrome_options.add_argument(f"--proxy-server={scheme}://{parsed.hostname}:{parsed.port}")
+                    except Exception:
+                        pass
 
         # Создаем драйвер под блокировкой, чтобы не стартовали одновременно несколько инстансов
         with chrome_creation_lock:
