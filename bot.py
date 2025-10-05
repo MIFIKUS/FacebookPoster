@@ -10,7 +10,7 @@ import shutil
 import platform
 from io import BytesIO
 from selenium import webdriver
-from selenium_authenticated_proxy import SeleniumAuthenticatedProxy
+from seleniumwire import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from FB.Groups.find import find_all_groups
@@ -384,39 +384,22 @@ def create_posts_preview(chat_id, config):
         temp_profile_dir = tempfile.mkdtemp(prefix="fbposter_chrome_")
         chrome_options.add_argument(f"--user-data-dir={temp_profile_dir}")
 
+        seleniumwire_options = {}
+
         # Применяем прокси, если задан
         if config.get("proxy"):
             # Используем SeleniumAuthenticatedProxy для прокси с авторизацией
             proxy_url = config.get("proxy")
-            if proxy_url:
-                # Прокси с авторизацией: user:pass@host:port
-                # Пример: https://user301581:lqvn2y@77.83.195.210:8862
-                try:
-                    sap = SeleniumAuthenticatedProxy(proxy_url)
-                    # Поддержка разных версий пакета: пробуем доступные варианты
-                    if hasattr(sap, "add_to"):
-                        sap.add_to(chrome_options)
-                    elif hasattr(sap, "add_to_chrome"):
-                        sap.add_to_chrome(chrome_options)
-                    elif hasattr(sap, "apply_to"):
-                        sap.apply_to(chrome_options)
-                    else:
-                        raise AttributeError("SeleniumAuthenticatedProxy: не найден совместимый метод интеграции с ChromeOptions")
-                except Exception as e:
-                    # Резерв: базовая настройка прокси без авторизации через --proxy-server
-                    # (учет схемы и host:port; логин/пароль не обрабатываются этим способом)
-                    try:
-                        from urllib.parse import urlparse
-                        parsed = urlparse(proxy_url)
-                        scheme = parsed.scheme or "http"
-                        if parsed.hostname and parsed.port:
-                            chrome_options.add_argument(f"--proxy-server={scheme}://{parsed.hostname}:{parsed.port}")
-                    except Exception:
-                        pass
+            seleniumwire_options = {
+                "proxy": {
+                    "https": proxy_url,
+                    "http": proxy_url
+                }
+            }
 
         # Создаем драйвер под блокировкой, чтобы не стартовали одновременно несколько инстансов
         with chrome_creation_lock:
-            driver = webdriver.Chrome(options=chrome_options)
+            driver = webdriver.Chrome(options=chrome_options, seleniumwire_options=seleniumwire_options)
             
         # Скрываем автоматизацию
         driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
