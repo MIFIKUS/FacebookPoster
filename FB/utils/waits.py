@@ -5,7 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
 
-DEFAULT_TIMEOUT_SECONDS = 20
+DEFAULT_TIMEOUT_SECONDS = 60
 
 
 def wait_for_presence(driver: WebDriver, by: By, locator: str, timeout: int = DEFAULT_TIMEOUT_SECONDS):
