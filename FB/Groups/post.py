@@ -12,7 +12,7 @@ def make_post(driver: webdriver.Chrome, post: str, link: str):
     driver.get(link)
     
     # Ждем загрузки страницы
-    wait = WebDriverWait(driver, 10)
+    wait = WebDriverWait(driver, 60)
     
     try:
         # Ждем появления и кликаем на кнопку создания поста
