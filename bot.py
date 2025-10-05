@@ -522,12 +522,22 @@ def run_facebook_script(chat_id):
         chrome_options.add_argument(f"--user-data-dir={temp_profile_dir}")
 
         # Применяем прокси, если задан
+        seleniumwire_options = {}
+
+        # Применяем прокси, если задан
         if config.get("proxy"):
-            chrome_options.add_argument(f"--proxy-server={config['proxy']}")
+            # Используем SeleniumAuthenticatedProxy для прокси с авторизацией
+            proxy_url = config.get("proxy")
+            seleniumwire_options = {
+                "proxy": {
+                    "https": proxy_url,
+                    "http": proxy_url
+                }
+            }
 
         # Создаем драйвер под блокировкой, чтобы не стартовали одновременно несколько инстансов
         with chrome_creation_lock:
-            driver = webdriver.Chrome(options=chrome_options)
+            driver = webdriver.Chrome(options=chrome_options, seleniumwire_options=seleniumwire_options)
             
         # Скрываем автоматизацию
         driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
