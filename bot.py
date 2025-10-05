@@ -10,6 +10,7 @@ import shutil
 import platform
 from io import BytesIO
 from selenium import webdriver
+from selenium_authenticated_proxy import SeleniumAuthenticatedProxy
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from FB.Groups.find import find_all_groups
@@ -367,7 +368,7 @@ def create_posts_preview(chat_id, config):
     try:
         # Настройка Chrome
         chrome_options = Options()
-        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--headless=new")
         chrome_options.add_argument("--window-size=1920,1080")
         if platform.system() != "Windows":
             chrome_options.add_argument("--no-sandbox")
@@ -494,7 +495,7 @@ def run_facebook_script(chat_id):
         # Настройка Chrome
         config = load_config()
         chrome_options = Options()
-        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--headless=new")
         chrome_options.add_argument("--window-size=1920,1080")
         if platform.system() != "Windows":
             chrome_options.add_argument("--no-sandbox")
