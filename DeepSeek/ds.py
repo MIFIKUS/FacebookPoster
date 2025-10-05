@@ -7,7 +7,7 @@ client = OpenAI(
 
 def change_text(post_text: str, group_name: str, posts: str, desc: str) -> str:
     """Меняет текст поста с помощью дипсика"""
-    with open('DeepSeek\\promt.txt', 'r', encoding='utf-8') as txt:
+    with open('DeepSeek/promt.txt', 'r', encoding='utf-8') as txt:
         promt_raw = txt.read()
     
     promt = promt_raw.format(text=post_text, group_name=group_name, posts=posts, group_desc=desc)
