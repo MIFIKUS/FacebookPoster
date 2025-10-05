@@ -400,6 +400,7 @@ def create_posts_preview(chat_id, config):
         # Создаем драйвер под блокировкой, чтобы не стартовали одновременно несколько инстансов
         with chrome_creation_lock:
             driver = webdriver.Chrome(options=chrome_options, seleniumwire_options=seleniumwire_options)
+            driver.set_page_load_timeout(180)
             
         # Скрываем автоматизацию
         driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
