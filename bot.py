@@ -386,7 +386,13 @@ def create_posts_preview(chat_id, config):
 
         # Применяем прокси, если задан
         if config.get("proxy"):
-            chrome_options.add_argument(f"--proxy-server={config['proxy']}")
+            # Используем SeleniumAuthenticatedProxy для прокси с авторизацией
+            proxy_url = config.get("proxy")
+            if proxy_url:
+                # Прокси с авторизацией: user:pass@host:port
+                # Пример: https://user301581:lqvn2y@77.83.195.210:8862
+                sap = SeleniumAuthenticatedProxy(proxy_url)
+                sap.add_to(chrome_options)
 
         # Создаем драйвер под блокировкой, чтобы не стартовали одновременно несколько инстансов
         with chrome_creation_lock:
