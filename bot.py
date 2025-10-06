@@ -21,7 +21,9 @@ from DeepSeek.ds import change_text
 
 # Инициализация бота
 bot = telebot.TeleBot("8400282082:AAEFh5oZXxZNgyiw-jE2ZpAzVJ1vZ_UfR1g", parse_mode=None)  # Замените на ваш токен
-
+prefs = {
+    "profile.default_content_setting_values.notifications": 2
+}
 # Файлы для хранения данных
 CONFIG_FILE = "bot_config.json"
 PROMPT_FILE = "DeepSeek/promt.txt"
@@ -378,8 +380,10 @@ def create_posts_preview(chat_id, config):
         # Антибот настройки
         chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
         chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+        chrome_options.add_argument("--disable-notifications")
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         chrome_options.add_experimental_option('useAutomationExtension', False)
+        chrome_options.add_experimental_option("prefs", prefs)
         # Уникальный профиль для избежания конфликта user-data-dir
         temp_profile_dir = tempfile.mkdtemp(prefix="fbposter_chrome_")
         chrome_options.add_argument(f"--user-data-dir={temp_profile_dir}")
@@ -515,8 +519,10 @@ def run_facebook_script(chat_id):
         # Антибот настройки
         chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
         chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+        chrome_options.add_argument("--disable-notifications")
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         chrome_options.add_experimental_option('useAutomationExtension', False)
+        chrome_options.add_experimental_option("prefs", prefs)
         # Уникальный профиль для избежания конфликта user-data-dir
         temp_profile_dir = tempfile.mkdtemp(prefix="fbposter_chrome_")
         chrome_options.add_argument(f"--user-data-dir={temp_profile_dir}")
