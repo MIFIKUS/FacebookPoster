@@ -20,7 +20,7 @@ from FB.Groups.post import make_post
 from DeepSeek.ds import change_text
 
 # Инициализация бота
-bot = telebot.TeleBot("8400282082:AAEFh5oZXxZNgyiw-jE2ZpAzVJ1vZ_UfR1g")  # Замените на ваш токен
+bot = telebot.TeleBot("8400282082:AAEFh5oZXxZNgyiw-jE2ZpAzVJ1vZ_UfR1g", parse_mode=None)  # Замените на ваш токен
 
 # Файлы для хранения данных
 CONFIG_FILE = "bot_config.json"
