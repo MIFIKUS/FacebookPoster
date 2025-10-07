@@ -13,7 +13,7 @@ def make_post(driver: webdriver.Chrome, post: str, link: str):
     driver.get(link)
     
     # Ждем загрузки страницы
-    wait = WebDriverWait(driver, 60)
+    wait = WebDriverWait(driver, 120)
     
     try:
         accept_alert_if_present(driver)
@@ -31,7 +31,7 @@ def make_post(driver: webdriver.Chrome, post: str, link: str):
         )
         accept_alert_if_present(driver)
         # Вводим текст поста
-        post_area.click()
+        driver.execute_script("arguments[0].focus();", post_area)
         post_area.send_keys(post)
         
         # Небольшая пауза для стабильности
