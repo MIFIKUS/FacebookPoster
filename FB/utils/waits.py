@@ -40,3 +40,12 @@ def wait_for_url_contains(driver: WebDriver, fragment: str, timeout: int = DEFAU
     return WebDriverWait(driver, timeout).until(EC.url_contains(fragment))
 
 
+def accept_alert_if_present(driver, timeout=3):
+    try:
+        WebDriverWait(driver, timeout).until(EC.alert_is_present())
+        alert = driver.switch_to.alert
+        print("Alert text:", alert.text)   # для логов
+        alert.accept()  # или alert.dismiss()
+        return True
+    except Exception:
+        return False
