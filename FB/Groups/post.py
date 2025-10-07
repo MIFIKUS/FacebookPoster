@@ -31,6 +31,7 @@ def make_post(driver: webdriver.Chrome, post: str, link: str):
         )
         accept_alert_if_present(driver)
         # Вводим текст поста
+        post_area.click()
         post_area.send_keys(post)
         
         # Небольшая пауза для стабильности
