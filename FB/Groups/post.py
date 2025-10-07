@@ -31,6 +31,7 @@ def make_post(driver: webdriver.Chrome, post: str, link: str):
             EC.presence_of_element_located((By.CSS_SELECTOR, "div[contenteditable='true'][role='textbox']"))
         )
         accept_alert_if_present(driver)
+        time.sleep(5)
         # Вводим текст поста
         driver.execute_script(f"const el = document.querySelector(\"[contenteditable='true'][aria-placeholder='Создайте общедоступную публикацию…']\"); el.focus(); document.execCommand('insertText', false, '{post}');")
         # Небольшая пауза для стабильности
