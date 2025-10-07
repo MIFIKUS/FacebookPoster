@@ -32,7 +32,7 @@ def make_post(driver: webdriver.Chrome, post: str, link: str):
         )
         accept_alert_if_present(driver)
         # Вводим текст поста
-        driver.execute_script(f"const el = document.querySelector(\"[contenteditable='true'][aria-placeholder='Создайте общедоступную публикацию…']\"); el.focus(); document.execCommand('{post}', false, 'Тестовый пост из консоли!');")
+        driver.execute_script(f"const el = document.querySelector(\"[contenteditable='true'][aria-placeholder='Создайте общедоступную публикацию…']\"); el.focus(); document.execCommand('insertText', false, '{post}');")
         # Небольшая пауза для стабильности
         accept_alert_if_present(driver)
         send_post_button = wait.until(
