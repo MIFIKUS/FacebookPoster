@@ -4,6 +4,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from FB.utils.waits import accept_alert_if_present
+from selenium.webdriver.common.action_chains import ActionChains
 import traceback
 
 import time
@@ -31,7 +32,8 @@ def make_post(driver: webdriver.Chrome, post: str, link: str):
         )
         accept_alert_if_present(driver)
         # Вводим текст поста
-        driver.execute_script("arguments[0].focus();", post_area)
+        actions = ActionChains(driver)
+        actions.move_to_element(post_area).pause(0.1).click().perform()
         post_area.send_keys(post)
         
         # Небольшая пауза для стабильности
