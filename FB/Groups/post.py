@@ -14,7 +14,7 @@ def make_post(driver: webdriver.Chrome, post: str, link: str):
     driver.get(link)
     
     # Ждем загрузки страницы
-    wait = WebDriverWait(driver, 120)
+    wait = WebDriverWait(driver, 60)
     
     try:
         accept_alert_if_present(driver)
@@ -31,14 +31,18 @@ def make_post(driver: webdriver.Chrome, post: str, link: str):
             EC.presence_of_element_located((By.CSS_SELECTOR, "div[contenteditable='true'][role='textbox']"))
         )
         accept_alert_if_present(driver)
-        while True:
+        result = True
+        for _ in range(300):
         # Вводим текст поста
             try:
                 driver.execute_script(f"const el = document.querySelector(\"[contenteditable='true'][aria-placeholder='Создайте общедоступную публикацию…']\"); el.focus(); document.execCommand('insertText', false, '{post}');")
+                result = True
                 break
             except Exception as e:
                 pass
-
+                time.sleep(0.1)
+        if result is False:
+            raise ValueError
         # Небольшая пауза для стабильности
         accept_alert_if_present(driver)
         send_post_button = wait.until(
@@ -51,7 +55,7 @@ def make_post(driver: webdriver.Chrome, post: str, link: str):
 
 
         time.sleep(2)
-        
+    
     except TimeoutException as e:
         traceback.print_exc()
         print(f"Ошибка: Не удалось найти элементы на странице в течение ожидаемого времени: {str(e)}")

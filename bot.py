@@ -13,6 +13,7 @@ from selenium import webdriver
 from seleniumwire import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import TimeoutException
 from FB.Groups.find import find_all_groups
 from FB.Groups.research import research_group
 # from FB.Login.login import make_login
@@ -567,8 +568,22 @@ def run_facebook_script(chat_id):
                 make_post(driver, post_text, group_link)
                 success_count += 1
                 bot.send_message(chat_id, f"✅ Успешно опубликовано в группе: {group_link}")
-
-            except Exception as e:
+            except ValueError:
+                bot.send_message(chat_id, f"❌ Ошибка в группе {group_link} при попытке вставить пост. Повторная попытка")
+                send_debug_screenshot(chat_id, driver, caption=f"🖼️ Скриншот при ошибке публикации: {group_link}")
+                for _ in range(3):
+                    try:
+                        bot.send_message(chat_id, f"📝 Публикация поста в группе: {group_link}")
+                        make_post(driver, post_text, group_link)
+                        bot.send_message(chat_id, f"✅ Успешно опубликовано в группе: {group_link}")
+                        break
+                    except ValueError:
+                        continue
+                    except TimeoutException as e:
+                        bot.send_message(chat_id, f"❌ Ошибка в группе {group_link}: {str(e)}\n{traceback.format_exc()}")
+                        send_debug_screenshot(chat_id, driver, caption=f"🖼️ Скриншот при ошибке публикации: {group_link}")
+                        break
+            except TimeoutException as e:
                 traceback.print_exc()
                 error_count += 1
                 bot.send_message(chat_id, f"❌ Ошибка в группе {group_link}: {str(e)}\n{traceback.format_exc()}")
