@@ -151,12 +151,12 @@ def load_preview_posts():
     with open(PREVIEW_FILE, "r", encoding="utf-8") as f:
         content = f.read().strip()
         if content:
-            groups = content.split("\n\n")
+            groups = content.split("https://www.facebook.com/groups/")
             for group in groups:
                 if group.strip():
                     lines = group.strip().split("\n", 1)
                     if len(lines) == 2:
-                        posts_data[lines[0]] = lines[1]
+                        posts_data[f'https://www.facebook.com/groups/{lines[0]}'] = lines[1]
     return posts_data
 
 # Состояния пользователей
