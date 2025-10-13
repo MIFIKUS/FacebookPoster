@@ -10,7 +10,7 @@ def change_text(post_text: str, group_name: str, posts: str, desc: str) -> str:
     with open('DeepSeek/promt.txt', 'r', encoding='utf-8') as txt:
         promt_raw = txt.read()
     
-    promt = promt_raw.format(text=post_text, group_name=group_name, posts=posts, group_desc=desc)
+    promt = promt_raw.format(text=post_text, groupname=group_name, posts=posts, groupdesc=desc)
     print(promt)
     return client.chat.completions.create(
         model='deepseek-reasoner',
