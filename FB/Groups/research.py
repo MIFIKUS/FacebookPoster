@@ -19,8 +19,9 @@ def research_group(driver: webdriver.Chrome, url: str) -> dict:
         private_span = driver.find_element(
             By.XPATH, "//span[text()='Только участники группы видят, кто в ней состоит и что публикуется.']"
         )
-    except Exception:
         return {'is_open': False, "desc": '', "posts": {}}
+    except Exception:
+        pass
         
     try:
         reveal_description_button = wait.until(
