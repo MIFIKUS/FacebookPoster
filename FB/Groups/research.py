@@ -20,7 +20,7 @@ def research_group(driver: webdriver.Chrome, url: str) -> dict:
             By.XPATH, "//span[text()='Только участники группы видят, кто в ней состоит и что публикуется.']"
         )
     except Exception:
-        return {'is_open': False, "desc": description, "posts": posts_data}
+        return {'is_open': False, "desc": '', "posts": {}}
         
     try:
         reveal_description_button = wait.until(
