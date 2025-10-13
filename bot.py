@@ -440,6 +440,9 @@ def create_posts_preview(chat_id, config):
             try:
                 bot.send_message(chat_id, f"📋 Исследование группы: {name}")
                 group_info = research_group(driver, link)
+                if not group_info['is_open']:
+                    bot.send_message(chat_id, f"🟡 Группа закрыта и пропускается: {name}")
+                    continue
 
                 # Формируем строку с постами
                 posts_str = ""
@@ -565,7 +568,9 @@ def run_facebook_script(chat_id):
         for group_link, post_text in preview_posts.items():
             try:
                 bot.send_message(chat_id, f"📝 Публикация поста в группе: {group_link}")
-                make_post(driver, post_text, group_link)
+                if make_post(driver, post_text, group_link) == 'SKIP':
+                    bot.send_message(chat_id, f"🟡 DeepSeek решил что группа не нуждается в публикации: {group_link}")    
+                    continue
                 success_count += 1
                 bot.send_message(chat_id, f"✅ Успешно опубликовано в группе: {group_link}")
             except ValueError:

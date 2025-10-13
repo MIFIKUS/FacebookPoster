@@ -10,6 +10,8 @@ import traceback
 import time
 
 def make_post(driver: webdriver.Chrome, post: str, link: str):
+    if post[0] == '-':
+        return 'SKIP'
     # Переходим на страницу группы
     driver.get(link)
     
@@ -32,6 +34,7 @@ def make_post(driver: webdriver.Chrome, post: str, link: str):
         )
         accept_alert_if_present(driver)
         result = True
+        time.sleep(5)
         for _ in range(300):
         # Вводим текст поста
             try:

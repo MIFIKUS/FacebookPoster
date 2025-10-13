@@ -13,6 +13,15 @@ def research_group(driver: webdriver.Chrome, url: str) -> dict:
     wait = WebDriverWait(driver, 15)
     driver.get(url)
     driver.execute_script("window.scrollBy(0, 200);")
+    # Проверяем, есть ли span с текстом "Только участники группы видят, кто в ней состоит и что публикуется."
+    is_private_group = False
+    try:
+        private_span = driver.find_element(
+            By.XPATH, "//span[text()='Только участники группы видят, кто в ней состоит и что публикуется.']"
+        )
+    except Exception:
+        return {'is_open': False, "desc": description, "posts": posts_data}
+        
     try:
         reveal_description_button = wait.until(
             EC.element_to_be_clickable((By.XPATH, "//div[@role='button' and text()='Ещё']"))
@@ -89,7 +98,7 @@ def research_group(driver: webdriver.Chrome, url: str) -> dict:
             "comments": [c.text for c in comments if c.text]
         }
 
-    return {"desc": description, "posts": posts_data}
+    return {'is_open': True, "desc": description, "posts": posts_data}
 
 
 
