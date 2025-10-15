@@ -13,7 +13,7 @@ def make_post(driver: webdriver.Chrome, post: str, link: str):
     if post[0] == '-':
         return 'SKIP'
     # Переходим на страницу группы
-    post = [1:]
+    post = post[1:]
     driver.get(link)
     
     # Ждем загрузки страницы
