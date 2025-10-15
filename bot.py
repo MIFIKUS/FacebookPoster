@@ -52,6 +52,7 @@ def load_config():
         "prompt": "",
         "proxy": ""
     }
+
 def _auth_with_cookies(driver, cookies_file_path):
     # Сначала загружаем страницу без cookies
     driver.get("https://www.facebook.com/")
@@ -119,6 +120,7 @@ def _auth_with_cookies(driver, cookies_file_path):
         print(f"Ошибка при проверке антибот защиты: {e}")
     
     driver.get_screenshot_as_file("cookies_applied.png")
+
 # Сохранение конфигурации
 def save_config(config):
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:
@@ -161,6 +163,9 @@ def load_preview_posts():
 
 # Состояния пользователей
 user_states = {}
+
+# dict для остановки рассылки: chat_id -> threading.Event()
+stop_events = {}
 
 # Глобальная блокировка для создания экземпляров Chrome (во избежание гонок на VPS)
 chrome_creation_lock = threading.Lock()
@@ -342,12 +347,26 @@ def run_script_callback(call):
 def confirm_posts_callback(call):
     bot.answer_callback_query(call.id)
 
-    # Запускаем рассылку в отдельном потоке
-    thread = threading.Thread(target=run_facebook_script, args=(call.message.chat.id,))
+    chat_id = call.message.chat.id
+    # Если уже есть активный Event — значит рассылка уже идёт
+    ev = stop_events.get(chat_id)
+    if ev and not ev.is_set():
+        bot.send_message(chat_id, "⚠️ Рассылка уже запущена для этого чата.")
+        return
+
+    # Создаём Event и сохраняем
+    stop_event = threading.Event()
+    stop_events[chat_id] = stop_event
+
+    # Запускаем рассылку в отдельном потоке и передаём stop_event
+    thread = threading.Thread(target=run_facebook_script, args=(chat_id, stop_event))
     thread.daemon = True
     thread.start()
 
-    bot.send_message(call.message.chat.id, "🚀 Рассылка запущена! Ожидайте уведомления...")
+    # Кнопка для остановки рассылки (появится сразу)
+    markup = types.InlineKeyboardMarkup()
+    markup.add(types.InlineKeyboardButton("🛑 Остановить рассылку", callback_data="stop_broadcast"))
+    bot.send_message(chat_id, "🚀 Рассылка запущена! Нажмите 🛑 чтобы остановить.", reply_markup=markup)
 
 @bot.callback_query_handler(func=lambda call: call.data == "edit_posts")
 def edit_posts_callback(call):
@@ -364,6 +383,18 @@ def edit_posts_callback(call):
         "текст_поста2\n\n"
         "И так далее..."
     )
+
+@bot.callback_query_handler(func=lambda call: call.data == "stop_broadcast")
+def stop_broadcast_callback(call):
+    bot.answer_callback_query(call.id)
+    chat_id = call.message.chat.id
+    ev = stop_events.get(chat_id)
+    if not ev:
+        bot.send_message(chat_id, "ℹ️ Нет активной рассылки для остановки.")
+        return
+    # Устанавливаем флаг — поток увидит это и завершит цикл
+    ev.set()
+    bot.send_message(chat_id, "🛑 Получен запрос на остановку. Останавливаем рассылку...")
 
 def create_posts_preview(chat_id, config):
     driver = None
@@ -500,7 +531,8 @@ def create_posts_preview(chat_id, config):
         if temp_profile_dir and os.path.isdir(temp_profile_dir):
             shutil.rmtree(temp_profile_dir, ignore_errors=True)
 
-def run_facebook_script(chat_id):
+# ------------------ Модифицированная функция рассылки с поддержкой stop_event ------------------
+def run_facebook_script(chat_id, stop_event):
     driver = None
     temp_profile_dir = None
     try:
@@ -508,6 +540,7 @@ def run_facebook_script(chat_id):
         preview_posts = load_preview_posts()
         if not preview_posts:
             bot.send_message(chat_id, "❌ Нет постов для публикации!")
+            stop_events.pop(chat_id, None)
             return
 
         # Настройка Chrome
@@ -534,9 +567,7 @@ def run_facebook_script(chat_id):
         # Применяем прокси, если задан
         seleniumwire_options = {}
 
-        # Применяем прокси, если задан
         if config.get("proxy"):
-            # Используем SeleniumAuthenticatedProxy для прокси с авторизацией
             proxy_url = config.get("proxy")
             seleniumwire_options = {
                 "proxy": {
@@ -560,48 +591,84 @@ def run_facebook_script(chat_id):
         _auth_with_cookies(driver, config["cookies_file"])
         bot.send_message(chat_id, "✅ Cookies применены!")
 
-        # Получаем группы для публикации
         # Публикация постов
         success_count = 0
         error_count = 0
 
-        for group_link, post_text in preview_posts.items():
+        items = list(preview_posts.items())
+        total = len(items)
+        for idx, (group_link, post_text) in enumerate(items, start=1):
+            # Проверка флага остановки перед каждой группой
+            if stop_event.is_set():
+                bot.send_message(chat_id, f"🛑 Рассылка остановлена пользователем. Опубликовано: {success_count}, Ошибок: {error_count}")
+                break
+
             try:
-                bot.send_message(chat_id, f"📝 Публикация поста в группе: {group_link}")
-                if make_post(driver, post_text, group_link) == 'SKIP':
-                    bot.send_message(chat_id, f"🟡 DeepSeek решил что группа не нуждается в публикации: {group_link}")    
-                    continue
-                success_count += 1
-                bot.send_message(chat_id, f"✅ Успешно опубликовано в группе: {group_link}")
-            except ValueError:
-                bot.send_message(chat_id, f"❌ Ошибка в группе {group_link} при попытке вставить пост. Повторная попытка")
-                send_debug_screenshot(chat_id, driver, caption=f"🖼️ Скриншот при ошибке публикации: {group_link}")
-                for _ in range(3):
+                bot.send_message(chat_id, f"📝 [{idx}/{total}] Публикация поста в группе: {group_link}")
+                skip = False
+                error = False
+
+                for attempt in range(3):
+                    # Проверка флага внутри цикла попыток
+                    if stop_event.is_set():
+                        break
                     try:
-                        bot.send_message(chat_id, f"📝 Публикация поста в группе: {group_link}")
-                        make_post(driver, post_text, group_link)
-                        bot.send_message(chat_id, f"✅ Успешно опубликовано в группе: {group_link}")
+                        result = make_post(driver, post_text, group_link)
+                        if result == 'SKIP':
+                            bot.send_message(chat_id, f"🟡 DeepSeek решил что группа не нуждается в публикации: {group_link}")
+                            skip = True
+                        error = False
                         break
                     except ValueError:
+                        # Если ValueError — пробуем дальше (повторная попытка)
+                        error = True
+                        if stop_event.is_set():
+                            break
                         continue
                     except TimeoutException as e:
-                        bot.send_message(chat_id, f"❌ Ошибка в группе {group_link}: {str(e)}\n{traceback.format_exc()}")
+                        # Таймаут — считаем ошибкой для этой группы
+                        error = True
+                        bot.send_message(chat_id, f"❌ Timeout при публикации в {group_link}: {str(e)}")
                         send_debug_screenshot(chat_id, driver, caption=f"🖼️ Скриншот при ошибке публикации: {group_link}")
                         break
+                    except Exception as e:
+                        # Общая ошибка — лог и повтор
+                        error = True
+                        traceback.print_exc()
+                        if stop_event.is_set():
+                            break
+                        continue
+
+                if stop_event.is_set():
+                    bot.send_message(chat_id, "🛑 Остановка запрошена во время попыток публикации. Прерываем.")
+                    break
+
+                if skip:
+                    continue
+
+                if error:
+                    error_count += 1
+                    bot.send_message(chat_id, f"❌ Ошибка при публикации в {group_link}. Пропускаем.")
+                    send_debug_screenshot(chat_id, driver, caption=f"🖼️ Скриншот при ошибке публикации: {group_link}")
+                    continue
+
+                success_count += 1
+                bot.send_message(chat_id, f"✅ Успешно опубликовано в группе: {group_link}")
+
             except TimeoutException as e:
                 traceback.print_exc()
                 error_count += 1
                 bot.send_message(chat_id, f"❌ Ошибка в группе {group_link}: {str(e)}\n{traceback.format_exc()}")
                 send_debug_screenshot(chat_id, driver, caption=f"🖼️ Скриншот при ошибке публикации: {group_link}")
 
-
-        # Итоговый отчет
-        bot.send_message(
-            chat_id,
-            f"📊 Рассылка завершена!\n"
-            f"✅ Успешно: {success_count}\n"
-            f"❌ Ошибок: {error_count}"
-        )
+        else:
+            # выполнится, если цикл не был прерван break (т.е. дошли до конца)
+            bot.send_message(
+                chat_id,
+                f"📊 Рассылка завершена!\n"
+                f"✅ Успешно: {success_count}\n"
+                f"❌ Ошибок: {error_count}"
+            )
 
     except Exception as e:
         traceback.print_exc()
@@ -611,9 +678,14 @@ def run_facebook_script(chat_id):
 
     finally:
         if driver:
-            driver.quit()
+            try:
+                driver.quit()
+            except Exception:
+                pass
         if temp_profile_dir and os.path.isdir(temp_profile_dir):
             shutil.rmtree(temp_profile_dir, ignore_errors=True)
+        # удаляем Event (если он ещё есть)
+        stop_events.pop(chat_id, None)
 
 @bot.message_handler(content_types=["document"])
 def handle_document(message):
@@ -752,5 +824,3 @@ def handle_text(message):
 if __name__ == "__main__":
     print("🤖 Бот запущен!")
     bot.infinity_polling()
-
-# Вспомогательная функция авторизации через cookies
