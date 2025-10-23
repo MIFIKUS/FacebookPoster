@@ -21,7 +21,10 @@ def find_all_groups(driver: webdriver.Chrome, keyword: str) -> dict:
     ready_groups = {}
     result_lines = []
 
+    counter = 0
     while True:
+        if counter == 500:
+            break
         # Проверяем, есть ли элемент "Результатов больше нет"
         try:
             driver.find_element(By.XPATH, "//span[text()='Результатов больше нет']")
@@ -89,6 +92,7 @@ def find_all_groups(driver: webdriver.Chrome, keyword: str) -> dict:
             # если ссылка новая — обрабатываем
             try:
                 title = group.text
+                counter += 1
             except StaleElementReferenceException as e:
                 # если элемент стал устаревшим до чтения текста, пропустим — перезапустим цикл
                 traceback.print_exc()
