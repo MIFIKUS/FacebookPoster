@@ -23,7 +23,7 @@ def find_all_groups(driver: webdriver.Chrome, keyword: str) -> dict:
 
     counter = 0
     while True:
-        if counter == 500:
+        if counter == 200:
             break
         # Проверяем, есть ли элемент "Результатов больше нет"
         try:
