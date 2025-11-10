@@ -1,6 +1,7 @@
 import telebot
 import time
 from telebot import types
+import random
 import json
 import os
 import threading
@@ -598,6 +599,7 @@ def run_facebook_script(chat_id, stop_event):
         items = list(preview_posts.items())
         total = len(items)
         for idx, (group_link, post_text) in enumerate(items, start=1):
+            time.sleep(random.randint(1, 10))
             # Проверка флага остановки перед каждой группой
             if stop_event.is_set():
                 bot.send_message(chat_id, f"🛑 Рассылка остановлена пользователем. Опубликовано: {success_count}, Ошибок: {error_count}")
